@@ -26,24 +26,29 @@ const getCasa = async () => {
         const eventList = document.querySelectorAll(".flex.flex-col.md\\:flex-row-reverse");
     
         return Array.from(eventList).map((quote) => {
-            const eventObj = {};
-
-            eventObj.date = quote.querySelector('div.heading.text-2xl.mb-2').innerText.trim();
-            eventObj.title = quote.querySelector('div.heading.text-4xl.mb-2').innerText.trim();
-            eventObj.venue = quote.querySelector('div.heading.text-2xl').innerText.trim();
-            eventObj.address = quote.querySelector('div.heading.text-2xl').nextElementSibling.innerText.trim();
-            eventObj.time = quote.querySelector('div.heading.text-2xl').nextElementSibling.nextElementSibling.innerText.trim();
-            eventObj.price = quote.querySelector('div.mb-4').innerText.trim();
+            const date = quote.querySelector('div.heading.text-2xl.mb-2').innerText.trim();
+            const title = quote.querySelector('div.heading.text-4xl.mb-2').innerText.trim();
+            const venue = quote.querySelector('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div.heading').innerText.trim();
+            const address = quote.querySelector('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div:nth-of-type(2)').innerText.trim();
+            const time = quote.querySelector('[class="md:w-5/12 p-6"] > div:nth-of-type(4)').innerText.trim();
+            const price = quote.querySelector('[class="md:w-5/12 p-6"] > div.mb-4').innerText.trim();
             
             const imgElement = quote.querySelector('a img');
-            eventObj.image = imgElement ? imgElement.src : null;
+            const image = imgElement ? imgElement.src : null;
 
-            // eventObj.links = {
-            //     tickets: quote.querySelector('a#tickets-116983').href,
-            //     moreInfo: quote.querySelector('a.btn.false').href
-            // };
+            const ticketLinkElement = quote.querySelector('a.btn.btn-inverse');
+            const ticketLink = ticketLinkElement ? ticketLinkElement.getAttribute('href') : null;
 
-            return eventObj;
+            return {
+              date,
+              title,
+              venue,
+              address,
+              time,
+              price,
+              image,
+              ticketLink,
+            };
         })
     })
 
