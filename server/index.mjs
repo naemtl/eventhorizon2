@@ -1,4 +1,6 @@
 import { MongoClient } from 'mongodb'
+
+import { getBlueSkies } from './scrapers/blueskies.mjs';
 import { getCasa } from './scrapers/casa.mjs';
 
 const url = 'mongodb://localhost:27017';
@@ -13,7 +15,7 @@ try {
 
     const db = client.db(dbName);
     const eventsCollection = db.collection(collectionName);
-    const scrapers = [getCasa];
+    const scrapers = [getBlueSkies, getCasa];
     const result = await Promise.all(scrapers.map(scraper => scraper()));
     const events = await eventsCollection.insertMany(result.flat());
 
