@@ -1,4 +1,13 @@
 import puppeteer from "puppeteer";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+import { monthFrenchMap } from './helpers.mjs';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const formatDoorShowTime = (time) => time.match(/(\d{2}h\d{2})/gi).map(time => time.replace(/[Hh]/, ':'));
 
 const getBlueSkies = async () => {
     
@@ -22,11 +31,12 @@ const getBlueSkies = async () => {
         waitUntil: "domcontentloaded",
     });
 
-    const events = await page.evaluate(() => {
+    const unformattedEvents = await page.evaluate(() => {
         const eventList = document.querySelectorAll("article.eventlist-event.eventlist-event--upcoming");
     
         return Array.from(eventList).map((quote) => {
-            const date = quote.querySelector('h1.eventlist-title a').innerText.trim();
+            const dateFrench = quote.querySelector('h1.eventlist-title a').innerText.trim();
+            const doorShowTime = quote.querySelector('.col.sqs-col-12.span-12 > div:nth-of-type(2) .sqs-html-content p:nth-of-type(4)').innerText.trim();
             
             const titleContainer = quote.querySelector('.col.sqs-col-12.span-12 > div:nth-of-type(1)');
             const titleHeadings = titleContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
@@ -45,39 +55,75 @@ const getBlueSkies = async () => {
                 concatenatedText = concatenatedText.slice(0, -3);
                 concatenatedTexts.push(concatenatedText);
             });
-
-            console.log(concatenatedTexts);
             const title = concatenatedTexts.join(' + ');
 
             const venueAddressContainer = quote.querySelector('.col.sqs-col-12.span-12 > div:nth-of-type(2) .sqs-html-content p:nth-of-type(2) > strong');
             const venue = venueAddressContainer ? venueAddressContainer.innerText.trim() : '';
             
             const address = venueAddressContainer ? venueAddressContainer.nextSibling.textContent.trim().replace(/^-+\s*/, '').trim() : '';
-            const time = quote.querySelector('.col.sqs-col-12.span-12 > div:nth-of-type(2) .sqs-html-content p:nth-of-type(4)').innerText.trim();
-            
+
             const price = 'See ticket link'
             
             const imgElement = quote.querySelector('a.eventlist-column-thumbnail img');
             const image = imgElement ? imgElement.src : null;
             
-
             const ticketLinkElement = quote.querySelector('.row.sqs-row > .col.sqs-col-2.span-2 a');
             const ticketLink = ticketLinkElement ? ticketLinkElement.getAttribute('href') : null;
 
             return {
-              date,
+              doorShowTime,
+              dateFrench,
               title,
               venue,
               address,
-              time,
               price,
               image,
               ticketLink,
             };
         })
-    })
+    });
 
-    return events;
+    return unformattedEvents.map((event) => {
+        
+        const { 
+            doorShowTime,
+            dateFrench,
+            title,
+            venue,
+            address,
+            price,
+            image,
+            ticketLink 
+        } = event;
+        
+        const [rawDay, rawMonth, rawYear] = dateFrench.split(' ')
+        const day = parseInt(rawDay);
+        const month = parseInt(monthFrenchMap[rawMonth])
+        const year = parseInt(rawYear);
+
+        const [ doorTime, showTime ] = formatDoorShowTime(doorShowTime);
+        const [doorHour, doorMin] = doorTime.split(':').map(Number);
+        const [showHour, showMin] = showTime.split(':').map(Number);
+
+        const dateDoorTime = dayjs.utc(`${year}-${month}-${day} ${doorHour}:${doorMin}`).tz('America/New_York');
+        const dateShowTime = dayjs.utc(`${year}-${month}-${day} ${showHour}:${showMin}`).tz('America/New_York');
+        console.log(dateShowTime);
+        
+        
+        const originalId = `${title.split(" + ").map(part => part.replace(/[^a-zA-Z0-9]/g, '')).join('')}${dateShowTime.toISOString()}`;
+
+        return {
+            originalId,
+            title,
+            dateShowTime,
+            dateDoorTime,
+            venue,
+            address,
+            price,
+            image,
+            ticketLink
+        }
+    });
 }
 
 export { getBlueSkies };
