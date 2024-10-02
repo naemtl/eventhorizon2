@@ -1,4 +1,11 @@
 import puppeteer from "puppeteer";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+import { monthMap } from './helpers.mjs';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const getCasa = async () => {
     
@@ -22,16 +29,27 @@ const getCasa = async () => {
         waitUntil: "domcontentloaded",
     });
 
-    const events = await page.evaluate(() => {
+    const unformattedEvents = await page.evaluate(() => {
         const eventList = document.querySelectorAll(".flex.flex-col.md\\:flex-row-reverse");
     
         return Array.from(eventList).map((quote) => {
-            const date = quote.querySelector('div.heading.text-2xl.mb-2').innerText.trim();
-            const title = quote.querySelector('div.heading.text-4xl.mb-2').innerText.trim();
-            const venue = quote.querySelector('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div.heading').innerText.trim();
-            const address = quote.querySelector('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div:nth-of-type(2)').innerText.trim();
-            const time = quote.querySelector('[class="md:w-5/12 p-6"] > div:nth-of-type(4)').innerText.trim();
-            const price = quote.querySelector('[class="md:w-5/12 p-6"] > div.mb-4').innerText.trim();
+            const dateElement = quote.querySelector('div.heading.text-2xl.mb-2')
+            const rawDate = dateElement ? dateElement.innerText.trim() : null;
+            
+            const titleElement = quote.querySelector('div.heading.text-4xl.mb-2');
+            const title = titleElement ? titleElement.innerText.trim() : null;
+            
+            const venueElement = quote.querySelector('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div.heading');
+            const venue = venueElement ? venueElement.innerText.trim() : null;
+            
+            const addressElement = quote.querySelector('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div:nth-of-type(2)');
+            const address = addressElement ? addressElement.innerText.trim() : null;
+            
+            const timeElement = quote.querySelector('[class="md:w-5/12 p-6"] > div:nth-of-type(4)');
+            const rawTime = timeElement ? timeElement.innerText.trim() : null;
+            
+            const priceElement = quote.querySelector('[class="md:w-5/12 p-6"] > div.mb-4');
+            const price = priceElement ? priceElement.innerText.trim() : null;
             
             const imgElement = quote.querySelector('a img');
             const image = imgElement ? imgElement.src : null;
@@ -40,11 +58,11 @@ const getCasa = async () => {
             const ticketLink = ticketLinkElement ? ticketLinkElement.getAttribute('href') : null;
 
             return {
-              date,
+              rawDate,
               title,
               venue,
               address,
-              time,
+              rawTime,
               price,
               image,
               ticketLink,
@@ -52,7 +70,54 @@ const getCasa = async () => {
         })
     })
 
-    return events;
+    return unformattedEvents.map(event => {
+        const {
+            rawDate,
+            title,
+            venue,
+            address,
+            rawTime,
+            price,
+            image,
+            ticketLink
+        } = event;
+
+        const [rawMonth, rawDay, rawYear] = rawDate.replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\b/g, '').split(' ');
+
+        console.log(rawDate.replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\b/g, ''));
+        
+        const day = parseInt(rawDay);
+        const month = parseInt(monthMap[rawMonth.toLowerCase()]);
+        const year = parseInt(rawYear);
+        // FIXME: returns invalid date
+
+        // console.log(day);
+        // console.log(month);
+        // console.log(year);
+        // console.log(dayjs(rawTime, "hh:mm A"));
+        
+
+        const [doorHour, doorMin] = dayjs(rawTime, "hh:mm A").format("HH:mm").split(':');
+        // FIXME: returns invalid date
+        
+        const dateShowTime = dayjs.utc(`${year}-${month}-${day} ${doorHour}:${doorMin}`).tz('America/New_York');
+        
+        const dateDoorTime = null;
+
+        const originalId = `${title.split(" ").map(part => part.replace(/[^a-zA-Z0-9]/g, '')).join('')}${dateShowTime}`;
+
+        return {
+            originalId,
+            title,
+            dateShowTime,
+            dateDoorTime,
+            venue,
+            address,
+            price,
+            image,
+            ticketLink
+        }
+    });
 }
 
 export { getCasa };
