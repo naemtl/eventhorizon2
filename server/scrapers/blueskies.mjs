@@ -2,7 +2,7 @@ import puppeteer from "puppeteer";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
-import { monthFrenchMap } from './helpers.mjs';
+import { monthMap } from './helpers.mjs';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -98,7 +98,7 @@ const getBlueSkies = async () => {
         
         const [rawDay, rawMonth, rawYear] = dateFrench.split(' ')
         const day = parseInt(rawDay);
-        const month = parseInt(monthFrenchMap[rawMonth])
+        const month = parseInt(monthMap[rawMonth.toLowerCase()]);
         const year = parseInt(rawYear);
 
         const [ doorTime, showTime ] = formatDoorShowTime(doorShowTime);
@@ -107,7 +107,6 @@ const getBlueSkies = async () => {
 
         const dateDoorTime = dayjs.utc(`${year}-${month}-${day} ${doorHour}:${doorMin}`).tz('America/New_York');
         const dateShowTime = dayjs.utc(`${year}-${month}-${day} ${showHour}:${showMin}`).tz('America/New_York');
-        console.log(dateShowTime);
         
         
         const originalId = `${title.split(" + ").map(part => part.replace(/[^a-zA-Z0-9]/g, '')).join('')}${dateShowTime.toISOString()}`;
