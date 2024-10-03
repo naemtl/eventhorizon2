@@ -1,9 +1,11 @@
 import puppeteer from "puppeteer";
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat.js';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
-import { monthMap } from './helpers.mjs';
+import { getOriginalId, monthMap } from './helpers.mjs';
 
+dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -82,29 +84,21 @@ const getCasa = async () => {
             ticketLink
         } = event;
 
-        const [rawMonth, rawDay, rawYear] = rawDate.replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\b/g, '').split(' ');
-
-        console.log(rawDate.replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\b/g, ''));
+        const [rawMonth, rawDay, rawYear] = rawDate.replace(/,/g, '').split(' ').slice(1);
         
         const day = parseInt(rawDay);
         const month = parseInt(monthMap[rawMonth.toLowerCase()]);
         const year = parseInt(rawYear);
-        // FIXME: returns invalid date
 
-        // console.log(day);
-        // console.log(month);
-        // console.log(year);
-        // console.log(dayjs(rawTime, "hh:mm A"));
-        
+        const rawShowTime = rawTime.split(' ').slice(0, -1).join(' '); 
 
-        const [doorHour, doorMin] = dayjs(rawTime, "hh:mm A").format("HH:mm").split(':');
-        // FIXME: returns invalid date
+        const [showHour, showMin] = dayjs(rawShowTime, "h:mm A").format("HH:mm").split(':');
         
-        const dateShowTime = dayjs.utc(`${year}-${month}-${day} ${doorHour}:${doorMin}`).tz('America/New_York');
+        const dateShowTime = dayjs.utc(`${year}-${month}-${day} ${showHour}:${showMin}`).tz('America/New_York');
         
         const dateDoorTime = null;
 
-        const originalId = `${title.split(" ").map(part => part.replace(/[^a-zA-Z0-9]/g, '')).join('')}${dateShowTime}`;
+        const originalId = getOriginalId(title.split(' '), dateShowTime);
 
         return {
             originalId,
