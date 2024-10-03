@@ -24,3 +24,5 @@ export const monthMap = {
     'décembre': '12',
     'december': '12'
 }
+
+export const getOriginalId = (titleArray, dateShowTime) => `${titleArray.map(part => part.replace(/[^a-zA-Z0-9]/g, '')).join('')}${dateShowTime.toISOString()}`;
