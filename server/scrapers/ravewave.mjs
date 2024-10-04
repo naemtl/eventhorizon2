@@ -1,7 +1,7 @@
 import { getUnformattedEvents } from "./helpers.mjs";
 
-const getAskAPunk = async () => {
-    const unformattedEvents = await getUnformattedEvents("https://montreal.askapunk.net/api/events");
+const getRavewave = async () => {
+    const unformattedEvents = await getUnformattedEvents("https://www.rave.ca/en/json/events");
     
     unformattedEvents.map(event => {
         //
@@ -10,4 +10,4 @@ const getAskAPunk = async () => {
     })
 }
 
-getAskAPunk();
+getRavewave();
