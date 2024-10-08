@@ -1,5 +1,6 @@
 import { MongoClient } from 'mongodb'
 
+import { getAskAPunk } from './scrapers/askapunk.mjs';
 import { getBlueSkies } from './scrapers/blueskies.mjs';
 import { getCasa } from './scrapers/casa.mjs';
 import { getRavewave } from './scrapers/ravewave.mjs';
@@ -16,7 +17,7 @@ try {
 
     const db = client.db(dbName);
     const eventsCollection = db.collection(collectionName);
-    const scrapers = [getBlueSkies, getCasa, getRavewave];
+    const scrapers = [getAskAPunk, getBlueSkies, getCasa, getRavewave];
     const result = await Promise.all(scrapers.map(scraper => scraper()));
     const events = await eventsCollection.insertMany(result.flat());
 
