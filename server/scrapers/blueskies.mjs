@@ -2,7 +2,7 @@ import puppeteer from "puppeteer";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
-import { getOriginalId,monthMap } from './helpers.mjs';
+import { getOriginalId, monthMap } from './helpers.mjs';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -58,11 +58,9 @@ const getBlueSkies = async () => {
             const title = concatenatedTexts.join(' + ');
 
             const venueAddressContainer = quote.querySelector('.col.sqs-col-12.span-12 > div:nth-of-type(2) .sqs-html-content p:nth-of-type(2) > strong');
-            const venue = venueAddressContainer ? venueAddressContainer.innerText.trim() : '';
+            const venue = venueAddressContainer ? venueAddressContainer.innerText.trim() : null;
             
-            const address = venueAddressContainer ? venueAddressContainer.nextSibling.textContent.trim().replace(/^-+\s*/, '').trim() : '';
-
-            const price = 'See ticket link'
+            const address = venueAddressContainer ? venueAddressContainer.nextSibling.textContent.trim().replace(/^-+\s*/, '').trim() : null;
             
             const imgElement = quote.querySelector('a.eventlist-column-thumbnail img');
             const image = imgElement ? imgElement.src : null;
@@ -76,7 +74,6 @@ const getBlueSkies = async () => {
               title,
               venue,
               address,
-              price,
               image,
               ticketLink,
             };
@@ -91,7 +88,6 @@ const getBlueSkies = async () => {
             title,
             venue,
             address,
-            price,
             image,
             ticketLink 
         } = event;
@@ -105,8 +101,8 @@ const getBlueSkies = async () => {
         const [doorHour, doorMin] = doorTime.split(':').map(Number);
         const [showHour, showMin] = showTime.split(':').map(Number);
 
-        const dateDoorTime = dayjs.utc(`${year}-${month}-${day} ${doorHour}:${doorMin}`).tz('America/New_York');
-        const dateShowTime = dayjs.utc(`${year}-${month}-${day} ${showHour}:${showMin}`).tz('America/New_York');
+        const dateDoorTime = dayjs.utc(`${year}-${month}-${day} ${doorHour}:${doorMin}`).tz('America/New_York').toISOString();
+        const dateShowTime = dayjs.utc(`${year}-${month}-${day} ${showHour}:${showMin}`).tz('America/New_York').toISOString();
         
         
         const originalId = getOriginalId(title.split(' + '), dateShowTime);
@@ -118,9 +114,11 @@ const getBlueSkies = async () => {
             dateDoorTime,
             venue,
             address,
-            price,
+            price: null,
             image,
-            ticketLink
+            ticketLink,
+            moreInfoLink: null, // TODO: add moreInfoLink
+            source: 'blueskiesturnblack',
         }
     });
 }

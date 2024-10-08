@@ -25,7 +25,7 @@ export const monthMap = {
     'december': '12'
 }
 
-export const getOriginalId = (titleArray, dateShowTime) => `${titleArray.map(part => part.replace(/[^a-zA-Z0-9]/g, '')).join('')}${dateShowTime.toISOString()}`;
+export const getOriginalId = (titleArray, dateShowTime) => `${titleArray.map(part => part.replace(/[^a-zA-Z0-9]/g, '')).join('')}${dateShowTime}`;
 
 export const getUnformattedEvents =  async (url) => {
     try {
