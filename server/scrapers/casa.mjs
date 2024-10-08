@@ -94,9 +94,7 @@ const getCasa = async () => {
 
         const [showHour, showMin] = dayjs(rawShowTime, "h:mm A").format("HH:mm").split(':');
         
-        const dateShowTime = dayjs.utc(`${year}-${month}-${day} ${showHour}:${showMin}`).tz('America/New_York');
-        
-        const dateDoorTime = null;
+        const dateShowTime = dayjs.utc(`${year}-${month}-${day} ${showHour}:${showMin}`).tz('America/New_York').toISOString();     
 
         const originalId = getOriginalId(title.split(' '), dateShowTime);
 
@@ -104,12 +102,14 @@ const getCasa = async () => {
             originalId,
             title,
             dateShowTime,
-            dateDoorTime,
+            dateDoorTime: null,
             venue,
             address,
             price,
             image,
-            ticketLink
+            ticketLink,
+            moreInfoLink: null, // TODO: add moreInfoLink
+            source: 'casadelpopolo'
         }
     });
 }
