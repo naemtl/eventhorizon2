@@ -27,10 +27,11 @@ export const monthMap = {
 
 export const getOriginalId = (titleArray, dateShowTime) => `${titleArray.map(part => part.replace(/[^a-zA-Z0-9]/g, '')).join('')}${dateShowTime}`;
 
-export const getUnformattedEvents =  async (url) => {
+export const getUnformattedEvents =  async (url, additionalParams = {}) => {
     try {
         const response = await fetch(url, {
             method: "GET",
+            ...additionalParams,
         });
 
         if (!response.ok) {
