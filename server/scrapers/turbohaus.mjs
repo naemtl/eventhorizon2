@@ -8,48 +8,61 @@ const getTurbohaus = async () => {
 
     // Turbohaus month param is {01-12}-{YYYY}
 
-    const currentMonth = dayjs().format('MM');
-    const nextMonth = dayjs().add(1, 'month').format('MM');
-    const subsequentMonth = dayjs().add(2, 'month').format('MM');
+    const currentMonthYear = dayjs().format('MM-YYYY');    
+    const nextMonthYear = dayjs().add(1, 'month').format('MM-YYYY');
+    const subsequentMonthYear = dayjs().add(2, 'month').format('MM-YYYY');
+    const getCalendarEvents = async (monthYear) => {
 
-    const additionalParams = {
-        month: "10-2022",
-        collectionId: "5514d06ce4b0cc915219770e",
+        const additionalParams = {
+            month: monthYear,
+            collectionId: "5514d06ce4b0cc915219770e",
+        }
+
+        console.log(additionalParams)
+
+        const unformattedEvents = await getUnformattedEvents("https://www.turbohaus.ca/api/open/GetItemsByMonth", additionalParams);
+        
+        const formattedEvents = unformattedEvents.map(event => {
+            const {
+                id,
+                title,
+                location,
+                fullUrl,
+                assetUrl,
+                startDate,
+            } = event;
+
+            const rawDateShowTime = dayjs(startDate).format('YYYY-MM-DD HH:mm');
+            const dateShowTime = dayjs.utc(rawDateShowTime).toISOString();
+
+            const moreInfoLink = `https://www.turbohaus.com/${fullUrl}`
+            
+            return {
+                originalId: id,
+                title,
+                dateShowTime,
+                dateDoorTime: null,
+                venue: location.addressTitle,
+                address: location.addressLine1,
+                price: null,
+                image: assetUrl,
+                ticketLink: null,
+                moreInfoLink,
+                source: "turbohaus",
+            };
+        });
+
+        return formattedEvents
+
     }
 
-    const unformattedEvents = await getUnformattedEvents("https://www.turbohaus.com/api/events", additionalParams);
+    const currentMonthEvents = await getCalendarEvents(currentMonthYear);
+    const nextMonthEvents = await getCalendarEvents(nextMonthYear);
+    const subsequentMonthEvents = await getCalendarEvents(subsequentMonthYear);
     
-    const formattedEvents = unformattedEvents.map(event => {
-        const {
-            id,
-            title,
-            location,
-            fullUrl,
-            assetUrl,
-            startDate,
-          } = event;
+    const events = [...currentMonthEvents, ...nextMonthEvents, ...subsequentMonthEvents]
 
-          const rawDateShowTime = dayjs(startDate).format('YYYY-MM-DD HH:mm');
-          const dateShowTime = dayjs.utc(rawDateShowTime).toISOString();
-
-          const moreInfoLink = `https://www.turbohaus.com/events/${fullUrl}`
-          
-          return {
-            originalId: id,
-            title,
-            dateShowTime,
-            dateDoorTime: null,
-            venue: location.addressTitle,
-            address: location.addressLine1,
-            price: null,
-            image: assetUrl,
-            ticketLink: null,
-            moreInfoLink,
-            source: "turbohaus",
-          };
-    });
-
-    return formattedEvents
+    return events;
 }
 
 export { getTurbohaus };
