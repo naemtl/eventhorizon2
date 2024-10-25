@@ -18,10 +18,8 @@ const getTurbohaus = async () => {
             collectionId: "5514d06ce4b0cc915219770e",
         }
 
-        console.log(additionalParams)
+        const unformattedEvents = await getUnformattedEvents(`https://www.turbohaus.ca/api/open/GetItemsByMonth?month=${additionalParams.month}&collectionId=${additionalParams.collectionId}`);
 
-        const unformattedEvents = await getUnformattedEvents("https://www.turbohaus.ca/api/open/GetItemsByMonth", additionalParams);
-        
         const formattedEvents = unformattedEvents.map(event => {
             const {
                 id,

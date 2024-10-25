@@ -4,6 +4,7 @@ import { getAskAPunk } from './scrapers/askapunk.mjs';
 import { getBlueSkies } from './scrapers/blueskies.mjs';
 import { getCasa } from './scrapers/casa.mjs';
 import { getRavewave } from './scrapers/ravewave.mjs';
+import { getTurbohaus } from './scrapers/turbohaus.mjs';
 
 const url = 'mongodb://localhost:27017';
 const dbName = 'EventHorizon';
@@ -17,7 +18,7 @@ try {
 
     const db = client.db(dbName);
     const eventsCollection = db.collection(collectionName);
-    const scrapers = [getAskAPunk, getBlueSkies, getCasa, getRavewave];
+    const scrapers = [getAskAPunk, getBlueSkies, getCasa, getRavewave, getTurbohaus];
     const result = await Promise.all(scrapers.map(scraper => scraper()));
     const events = await eventsCollection.insertMany(result.flat());
 
