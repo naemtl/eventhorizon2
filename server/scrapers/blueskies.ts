@@ -2,7 +2,7 @@ import puppeteer from "puppeteer";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
-import { getOriginalId, monthMap } from './helpers.mjs';
+import { getOriginalId, monthMap } from './helpers.ts';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

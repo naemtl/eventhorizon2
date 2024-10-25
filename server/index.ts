@@ -1,10 +1,10 @@
 import { MongoClient } from 'mongodb'
 
-import { getAskAPunk } from './scrapers/askapunk.mjs';
-import { getBlueSkies } from './scrapers/blueskies.mjs';
-import { getCasa } from './scrapers/casa.mjs';
-import { getRavewave } from './scrapers/ravewave.mjs';
-import { getTurbohaus } from './scrapers/turbohaus.mjs';
+import { getAskAPunk } from './scrapers/askapunk.ts';
+import { getBlueSkies } from './scrapers/blueskies.ts';
+import { getCasa } from './scrapers/casa.ts';
+import { getRavewave } from './scrapers/ravewave.ts';
+import { getTurbohaus } from './scrapers/turbohaus.ts';
 
 const url = 'mongodb://localhost:27017';
 const dbName = 'EventHorizon';
