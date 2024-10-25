@@ -11,6 +11,8 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "dayjs": "^1.11.13",
+    "mongodb": "^6.10.0",
     "puppeteer": "^23.2.2"
   }
 }
