@@ -1,4 +1,4 @@
-export const monthMap = {
+export const monthMap: Record<string, string> = {
     'janvier': '01',
     'january': '01',
     'février': '02',
@@ -25,7 +25,7 @@ export const monthMap = {
     'december': '12'
 }
 
-export const getOriginalId = (titleArray, dateShowTime) => `${titleArray.map(part => part.replace(/[^a-zA-Z0-9]/g, '')).join('')}${dateShowTime}`;
+export const getOriginalId = (titleArray: string[], dateShowTime: string) => `${titleArray.map(part => part.replace(/[^a-zA-Z0-9]/g, '')).join('')}${dateShowTime}`;
 
 export const getUnformattedEvents =  async (url, additionalParams = {}) => {
     try {

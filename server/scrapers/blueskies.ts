@@ -1,21 +1,32 @@
-import puppeteer from "puppeteer";
+import puppeteer, { Browser, Page } from "puppeteer";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
 import { getOriginalId, monthMap } from './helpers.ts';
+import { FormattedEvent } from '../types';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const formatDoorShowTime = (time) => time.match(/(\d{2}h\d{2})/gi).map(time => time.replace(/[Hh]/, ':'));
+interface Event {
+    doorShowTime: string;
+    dateFrench: string;
+    title: string;
+    venue: string | null;
+    address: string | null;
+    image: string | null;
+    ticketLink: string | null;
+}
 
-const getBlueSkies = async () => {
-    
-    const browser = await puppeteer.launch({
+const formatDoorShowTime = (time: string) => time.match(/(\d{2}h\d{2})/gi)?.map(time => time.replace(/[Hh]/, ':'));
+
+const getBlueSkies = async (): Promise<FormattedEvent[]> => {
+  try {
+    const browser: Browser = await puppeteer.launch({
         headless: false,
         defaultViewport: null
     })
-    const page = await browser.newPage();
+    const page: Page = await browser.newPage();
 
     await page.setRequestInterception(true);
 
@@ -31,24 +42,26 @@ const getBlueSkies = async () => {
         waitUntil: "domcontentloaded",
     });
 
-    const unformattedEvents = await page.evaluate(() => {
+    const unformattedEvents: Event[] = await page.evaluate(() => {
         const eventList = document.querySelectorAll("article.eventlist-event.eventlist-event--upcoming");
     
         return Array.from(eventList).map((quote) => {
-            const dateFrench = quote.querySelector('h1.eventlist-title a').innerText.trim();
-            const doorShowTime = quote.querySelector('.col.sqs-col-12.span-12 > div:nth-of-type(2) .sqs-html-content p:nth-of-type(4)').innerText.trim();
+            const dateFrench = quote.querySelector<HTMLAnchorElement>('h1.eventlist-title a')?.innerText.trim() || ''; // TODO: add error logging to DB
+            const doorShowTime = quote.querySelector<HTMLParagraphElement>('.col.sqs-col-12.span-12 > div:nth-of-type(2) .sqs-html-content p:nth-of-type(4)')?.innerText.trim() || ''; // TODO: add error logging to DB
             
-            const titleContainer = quote.querySelector('.col.sqs-col-12.span-12 > div:nth-of-type(1)');
-            const titleHeadings = titleContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
-            let concatenatedTexts = [];
+            const titleContainer = quote.querySelector<HTMLDivElement>('.col.sqs-col-12.span-12 > div:nth-of-type(1)');
+            const titleHeadings = titleContainer?.querySelectorAll<HTMLHeadingElement>('h1, h2, h3, h4, h5, h6');
+            const concatenatedTexts: string[] = [];
 
-            titleHeadings.forEach(heading => {
+            titleHeadings?.forEach(heading => {
                 let concatenatedText = '';
 
                 heading.childNodes.forEach(child => {
                     if (child.nodeType === Node.ELEMENT_NODE || child.nodeType === Node.TEXT_NODE) {
-                        concatenatedText += child.innerText ? child.innerText.trim() : child.textContent.trim();
-                        concatenatedText += ' + ';
+                        const text = (child as HTMLElement).innerText || (child as HTMLElement).textContent;
+                        if (text) {
+                            concatenatedText += text.trim() + ' + ';
+                        }
                     }
                 });
 
@@ -58,14 +71,14 @@ const getBlueSkies = async () => {
             const title = concatenatedTexts.join(' + ');
 
             const venueAddressContainer = quote.querySelector('.col.sqs-col-12.span-12 > div:nth-of-type(2) .sqs-html-content p:nth-of-type(2) > strong');
-            const venue = venueAddressContainer ? venueAddressContainer.innerText.trim() : null;
+            const venue = venueAddressContainer ? (venueAddressContainer as HTMLElement).innerText.trim() : null;
             
-            const address = venueAddressContainer ? venueAddressContainer.nextSibling.textContent.trim().replace(/^-+\s*/, '').trim() : null;
+            const address = venueAddressContainer ? (venueAddressContainer.nextSibling as HTMLElement).innerText?.trim().replace(/^-+\s*/, '').trim() : null;
             
-            const imgElement = quote.querySelector('a.eventlist-column-thumbnail img');
+            const imgElement = quote.querySelector<HTMLImageElement>('a.eventlist-column-thumbnail img');
             const image = imgElement ? imgElement.src : null;
             
-            const ticketLinkElement = quote.querySelector('.row.sqs-row > .col.sqs-col-2.span-2 a');
+            const ticketLinkElement = quote.querySelector<HTMLAnchorElement>('.row.sqs-row > .col.sqs-col-2.span-2 a');
             const ticketLink = ticketLinkElement ? ticketLinkElement.getAttribute('href') : null;
 
             return {
@@ -97,7 +110,9 @@ const getBlueSkies = async () => {
         const month = parseInt(monthMap[rawMonth.toLowerCase()]);
         const year = parseInt(rawYear);
 
-        const [ doorTime, showTime ] = formatDoorShowTime(doorShowTime);
+        const formattedDoorShowTime = formatDoorShowTime(doorShowTime);
+        const preciseTime = !!formattedDoorShowTime;
+        const [ doorTime, showTime ] = formattedDoorShowTime || ["00:00", "00:00"];
         const [doorHour, doorMin] = doorTime.split(':').map(Number);
         const [showHour, showMin] = showTime.split(':').map(Number);
 
@@ -112,6 +127,7 @@ const getBlueSkies = async () => {
             title,
             dateShowTime,
             dateDoorTime,
+            preciseTime,
             venue,
             address,
             price: null,
@@ -121,6 +137,10 @@ const getBlueSkies = async () => {
             source: 'blueskiesturnblack',
         }
     });
+  } catch (error) {
+      console.error(error);
+      return [];
+  }
 }
 
 export { getBlueSkies };
