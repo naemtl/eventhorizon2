@@ -4,6 +4,7 @@ import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
 import { getOriginalId, monthMap } from './helpers.ts';
 import { FormattedEvent } from '../types';
+import { writeLog } from "../helpers/logHelper.ts";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -138,7 +139,7 @@ const getBlueSkies = async (): Promise<FormattedEvent[]> => {
         }
     });
   } catch (error) {
-      console.error(error);
+      writeLog({ error, source: 'blueskiesturnblack' });
       return [];
   }
 }

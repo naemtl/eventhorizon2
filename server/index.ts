@@ -10,7 +10,7 @@ const url = 'mongodb://localhost:27017';
 const dbName = 'EventHorizon';
 const collectionName = 'events';
 
-const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
+const client = new MongoClient(url);
 
 try {
     await client.connect();
