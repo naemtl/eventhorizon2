@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
-import { getUnformattedEvents } from "./helpers.ts";
+
+import { getUnformattedEvents } from "../helpers/scrapeHelper.ts";
 
 dayjs.extend(utc);
 

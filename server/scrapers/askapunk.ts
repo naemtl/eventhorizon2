@@ -1,7 +1,8 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
-import { getUnformattedEvents } from "./helpers.ts";
+
+import { getUnformattedEvents } from "../helpers/scrapeHelper.ts";
 import { writeLog } from '../helpers/logHelper.ts';
 
 dayjs.extend(utc);
@@ -10,7 +11,7 @@ dayjs.extend(timezone);
 const getAskAPunk = async () => {
   try {
     const unformattedEvents = await getUnformattedEvents("https://montreal.askapunk.net/api/events");
-    
+
     const formattedEvents = unformattedEvents.map(event => {
       const rawDateShowTime = dayjs.unix(event.start_datetime)
       const dateShowTime = dayjs.utc(rawDateShowTime).tz('America/New_York').toISOString();
