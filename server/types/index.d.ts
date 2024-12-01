@@ -9,7 +9,7 @@ interface FormattedEvent {
     price: string | null;
     image: string | null;
     ticketLink: string | null;
-    moreInfoLink: null;
+    moreInfoLink: string | null;
     source: string;
 }
 

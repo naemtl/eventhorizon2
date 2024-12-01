@@ -96,7 +96,6 @@ const getBlueSkies = async (): Promise<FormattedEvent[]> => {
     });
 
     return unformattedEvents.map((event) => {
-        
         const { 
             doorShowTime,
             dateFrench,
@@ -140,7 +139,7 @@ const getBlueSkies = async (): Promise<FormattedEvent[]> => {
         }
     });
   } catch (error) {
-      writeLog({ error, source: 'blueskiesturnblack' });
+      writeLog({ error: error.message, source: 'blueskiesturnblack' });
       return [];
   }
 }

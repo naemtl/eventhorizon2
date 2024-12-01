@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 
 const url = 'mongodb://localhost:27017';
 const dbName = 'EventHorizon';
-const collectionName = 'log';
+const collectionName = 'error_logs';
 
 const client = new MongoClient(url);
 

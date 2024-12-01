@@ -129,7 +129,7 @@ const getCasa = async (): Promise<FormattedEvent[]> => {
         }
     });
   } catch (error) {
-    writeLog({ error, source: 'casadelpopolo' });
+    writeLog({ error: error.message, source: 'casadelpopolo' });
     return []; 
   }
 }

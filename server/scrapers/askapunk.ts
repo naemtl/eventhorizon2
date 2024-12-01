@@ -4,22 +4,38 @@ import timezone from 'dayjs/plugin/timezone.js';
 
 import { getUnformattedEvents } from "../helpers/scrapeHelper.ts";
 import { writeLog } from '../helpers/logHelper.ts';
+import { FormattedEvent } from '../types';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const getAskAPunk = async () => {
-  try {
-    const unformattedEvents = await getUnformattedEvents("https://montreal.askapunk.net/api/events");
+interface Event {
+  id: string;
+  title: string;
+  start_datetime: number;
+  place: {
+    name: string;
+    address: string;
+  } | null;
+  media: {
+    url: string;
+  }[] | null;
+  slug: string | null;
+}
 
-    const formattedEvents = unformattedEvents.map(event => {
+const getAskAPunk = async (): Promise<FormattedEvent[]> => {
+  try {
+    const unformattedEvents: Event[] = await getUnformattedEvents("https://montreal.askapunk.net/api/events");
+
+    return unformattedEvents.map(event => {
       const rawDateShowTime = dayjs.unix(event.start_datetime)
+      const preciseTime = !!rawDateShowTime;
       const dateShowTime = dayjs.utc(rawDateShowTime).tz('America/New_York').toISOString();
 
       const cleanTitle = event.title.replace(/[^ -~]+/g, "/");
       const venue = event.place?.name ?? null;
       const address = event.place?.address ?? null;
-      const image = event.media[0]?.url ? `https://montreal.askapunk.net/media/${event.media[0].url}` : null;
+      const image = event.media?.[0]?.url ? `https://montreal.askapunk.net/media/${event.media[0].url}` : null;
       const moreInfoLink = event.slug ? `https://montreal.askapunk.net/events/${event.slug}` : null;
 
       return {
@@ -27,6 +43,7 @@ const getAskAPunk = async () => {
         title: cleanTitle,
         dateShowTime,
         dateDoorTime: null,
+        preciseTime,
         venue,
         address,
         price: null,
@@ -36,7 +53,6 @@ const getAskAPunk = async () => {
         source: "askapunk"
       }
     });
-    return formattedEvents;
   } catch (error) {
     writeLog({ error: error.message, source: "askapunk" });
     return [];
