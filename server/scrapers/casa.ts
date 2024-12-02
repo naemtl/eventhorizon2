@@ -46,56 +46,58 @@ const getCasa = async (): Promise<FormattedEvent[]> => {
     });
 
     const unformattedEvents: Event[] = await page.evaluate(() => {
-        const eventList = document.querySelectorAll(".flex.flex-col.md\\:flex-row-reverse");
-    
-        return Array.from(eventList).map((quote) => {
-            const dateElement = quote.querySelector<HTMLDivElement>('div.heading.text-2xl.mb-2')
-            const rawDate = dateElement?.innerText.trim() || "";
-            
-            const titleElement = quote.querySelector<HTMLDivElement>('div.heading.text-4xl.mb-2');
-            const title = titleElement?.innerText.trim() || "";
-            
-            const venueElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div.heading');
-            const venue = venueElement ? venueElement.innerText.trim() : null;
-            
-            const addressElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div:nth-of-type(2)');
-            const address = addressElement ? addressElement.innerText.trim() : null;
-            
-            const timeElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(4)');
-            const rawTime = timeElement ? timeElement.innerText.trim() : null;
-            
-            const priceElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div.mb-4');
-            const price = priceElement ? priceElement.innerText.trim() : null;
-            
-            const imgElement = quote.querySelector<HTMLImageElement>('a img');
-            const image = imgElement ? imgElement.src : null;
+      const eventList = document.querySelectorAll(".flex.flex-col.md\\:flex-row-reverse");
+  
+      return Array.from(eventList).map((quote) => {
+        const dateElement = quote.querySelector<HTMLDivElement>('div.heading.text-2xl.mb-2')
+        const rawDate = dateElement?.innerText.trim() || "";
+        
+        const titleElement = quote.querySelector<HTMLDivElement>('div.heading.text-4xl.mb-2');
+        const title = titleElement?.innerText.trim() || "";
+        
+        const venueElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div.heading');
+        const venue = venueElement ? venueElement.innerText.trim() : null;
+        
+        const addressElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div:nth-of-type(2)');
+        const address = addressElement ? addressElement.innerText.trim() : null;
+        
+        const timeElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(4)');
+        const rawTime = timeElement ? timeElement.innerText.trim() : null;
+        
+        const priceElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div.mb-4');
+        const price = priceElement ? priceElement.innerText.trim() : null;
+        
+        const imgElement = quote.querySelector<HTMLImageElement>('a img');
+        const image = imgElement ? imgElement.src : null;
 
-            const ticketLinkElement = quote.querySelector<HTMLAnchorElement>('a.btn.btn-inverse');
-            const ticketLink = ticketLinkElement ? ticketLinkElement.getAttribute('href') : null;
+        const ticketLinkElement = quote.querySelector<HTMLAnchorElement>('a.btn.btn-inverse');
+        const ticketLink = ticketLinkElement ? ticketLinkElement.getAttribute('href') : null;
 
-            return {
-              rawDate,
-              title,
-              venue,
-              address,
-              rawTime,
-              price,
-              image,
-              ticketLink,
-            };
-        })
+        return {
+          rawDate,
+          title,
+          venue,
+          address,
+          rawTime,
+          price,
+          image,
+          ticketLink,
+        };
+      })
     });
 
-    return unformattedEvents.map(event => {
+    const formattedEvents: FormattedEvent[] = [];
+    for (const event of unformattedEvents) {
+      try {
         const {
-            rawDate,
-            title,
-            venue,
-            address,
-            rawTime,
-            price,
-            image,
-            ticketLink
+          rawDate,
+          title,
+          venue,
+          address,
+          rawTime,
+          price,
+          image,
+          ticketLink
         } = event;
 
         const [rawMonth, rawDay, rawYear] = rawDate.replace(/,/g, '').split(' ').slice(1);
@@ -113,23 +115,27 @@ const getCasa = async (): Promise<FormattedEvent[]> => {
 
         const originalId = getOriginalId(title.split(' '), dateShowTime);
 
-        return {
-            originalId,
-            title,
-            dateShowTime,
-            dateDoorTime: null,
-            preciseTime,
-            venue,
-            address,
-            price,
-            image,
-            ticketLink,
-            moreInfoLink: null, // TODO: add moreInfoLink
-            source: 'casadelpopolo'
-        }
-    });
+        formattedEvents.push({
+          originalId,
+          title,
+          dateShowTime,
+          dateDoorTime: null,
+          preciseTime,
+          venue,
+          address,
+          price,
+          image,
+          ticketLink,
+          moreInfoLink: null, // TODO: add moreInfoLink
+          source: 'casadelpopolo'
+        })
+      } catch (error) {
+        writeLog({ error: `Event-level error: ${error.message}`, source: "casadelpopolo", event });
+      }
+    }
+    return formattedEvents;
   } catch (error) {
-    writeLog({ error: error.message, source: 'casadelpopolo' });
+    writeLog({ error: `Source-level error: ${error.message}`, source: 'casadelpopolo' });
     return []; 
   }
 }
