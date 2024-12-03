@@ -26,8 +26,8 @@ interface Event {
 const getCasa = async (): Promise<FormattedEvent[]> => {
   try {
     const browser = await puppeteer.launch({
-        headless: false,
-        defaultViewport: null
+      headless: false,
+      defaultViewport: null
     })
     const page = await browser.newPage();
 
@@ -42,51 +42,57 @@ const getCasa = async (): Promise<FormattedEvent[]> => {
     });
 
     await page.goto("https://casadelpopolo.com/en", {
-        waitUntil: "domcontentloaded",
+      waitUntil: "domcontentloaded",
     });
 
     const unformattedEvents: Event[] = await page.evaluate(() => {
-      const eventList = document.querySelectorAll(".flex.flex-col.md\\:flex-row-reverse");
+      try {
+        const eventList = document.querySelectorAll(".flex.flex-col.md\\:flex-row-reverse");
   
-      return Array.from(eventList).map((quote) => {
-        const dateElement = quote.querySelector<HTMLDivElement>('div.heading.text-2xl.mb-2')
-        const rawDate = dateElement?.innerText.trim() || "";
-        
-        const titleElement = quote.querySelector<HTMLDivElement>('div.heading.text-4xl.mb-2');
-        const title = titleElement?.innerText.trim() || "";
-        
-        const venueElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div.heading');
-        const venue = venueElement ? venueElement.innerText.trim() : null;
-        
-        const addressElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div:nth-of-type(2)');
-        const address = addressElement ? addressElement.innerText.trim() : null;
-        
-        const timeElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(4)');
-        const rawTime = timeElement ? timeElement.innerText.trim() : null;
-        
-        const priceElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div.mb-4');
-        const price = priceElement ? priceElement.innerText.trim() : null;
-        
-        const imgElement = quote.querySelector<HTMLImageElement>('a img');
-        const image = imgElement ? imgElement.src : null;
+        return Array.from(eventList).map((quote) => {
+          const dateElement = quote.querySelector<HTMLDivElement>('div.heading.text-2xl.mb-2')
+          const rawDate = dateElement?.innerText.trim() || "";
+          
+          const titleElement = quote.querySelector<HTMLDivElement>('div.heading.text-4xl.mb-2');
+          const title = titleElement?.innerText.trim() || "";
+          
+          const venueElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div.heading');
+          const venue = venueElement ? venueElement.innerText.trim() : null;
+          
+          const addressElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(3) > div:nth-of-type(2)');
+          const address = addressElement ? addressElement.innerText.trim() : null;
+          
+          const timeElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div:nth-of-type(4)');
+          const rawTime = timeElement ? timeElement.innerText.trim() : null;
+          
+          const priceElement = quote.querySelector<HTMLDivElement>('[class="md:w-5/12 p-6"] > div.mb-4');
+          const price = priceElement ? priceElement.innerText.trim() : null;
+          
+          const imgElement = quote.querySelector<HTMLImageElement>('a img');
+          const image = imgElement ? imgElement.src : null;
 
-        const ticketLinkElement = quote.querySelector<HTMLAnchorElement>('a.btn.btn-inverse');
-        const ticketLink = ticketLinkElement ? ticketLinkElement.getAttribute('href') : null;
+          const ticketLinkElement = quote.querySelector<HTMLAnchorElement>('a.btn.btn-inverse');
+          const ticketLink = ticketLinkElement ? ticketLinkElement.getAttribute('href') : null;
 
-        return {
-          rawDate,
-          title,
-          venue,
-          address,
-          rawTime,
-          price,
-          image,
-          ticketLink,
-        };
-      })
+          return {
+            rawDate,
+            title,
+            venue,
+            address,
+            rawTime,
+            price,
+            image,
+            ticketLink,
+          };
+        })
+      } catch (error) {
+        writeLog({ error: `Scraper-level error: ${error.message}`, source: "casadelpopolo" });
+        return [];
+      }
     });
 
     const formattedEvents: FormattedEvent[] = [];
+    
     for (const event of unformattedEvents) {
       try {
         const {

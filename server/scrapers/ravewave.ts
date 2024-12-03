@@ -21,6 +21,7 @@ interface Event {
 const getRavewave = async (): Promise<FormattedEvent[]> => {
   try {
     const unformattedEvents: Event[] = await getUnformattedEvents("https://www.rave.ca/en/json/events");
+    
     const formattedEvents: FormattedEvent[] = [];
 
     for (const event of unformattedEvents) {

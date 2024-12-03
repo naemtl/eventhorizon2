@@ -27,34 +27,40 @@ const getAskAPunk = async (): Promise<FormattedEvent[]> => {
   try {
     const unformattedEvents: Event[] = await getUnformattedEvents("https://montreal.askapunk.net/api/events");
 
-    return unformattedEvents.map(event => {
-      const rawDateShowTime = dayjs.unix(event.start_datetime)
-      const preciseTime = !!rawDateShowTime;
-      const dateShowTime = dayjs.utc(rawDateShowTime).tz('America/New_York').toISOString();
+    const formattedEvents: FormattedEvent[] = [];
+    for (const event of unformattedEvents) {
+      try {
+        const rawDateShowTime = dayjs.unix(event.start_datetime)
+        const preciseTime = !!rawDateShowTime;
+        const dateShowTime = dayjs.utc(rawDateShowTime).tz('America/New_York').toISOString();
 
-      const cleanTitle = event.title.replace(/[^ -~]+/g, "/");
-      const venue = event.place?.name ?? null;
-      const address = event.place?.address ?? null;
-      const image = event.media?.[0]?.url ? `https://montreal.askapunk.net/media/${event.media[0].url}` : null;
-      const moreInfoLink = event.slug ? `https://montreal.askapunk.net/events/${event.slug}` : null;
+        const cleanTitle = event.title.replace(/[^ -~]+/g, "/");
+        const venue = event.place?.name ?? null;
+        const address = event.place?.address ?? null;
+        const image = event.media?.[0]?.url ? `https://montreal.askapunk.net/media/${event.media[0].url}` : null;
+        const moreInfoLink = event.slug ? `https://montreal.askapunk.net/events/${event.slug}` : null;
 
-      return {
-        originalId: event.id,
-        title: cleanTitle,
-        dateShowTime,
-        dateDoorTime: null,
-        preciseTime,
-        venue,
-        address,
-        price: null,
-        image,
-        ticketLink: null,
-        moreInfoLink,
-        source: "askapunk"
+        formattedEvents.push({
+          originalId: event.id,
+          title: cleanTitle,
+          dateShowTime,
+          dateDoorTime: null,
+          preciseTime,
+          venue,
+          address,
+          price: null,
+          image,
+          ticketLink: null,
+          moreInfoLink,
+          source: "askapunk"
+        })
+      } catch (error) {
+        writeLog({ error: `Event-level error: ${error.message}`, source: "askapunk", event });
       }
-    });
+    }
+    return formattedEvents
   } catch (error) {
-    writeLog({ error: error.message, source: "askapunk" });
+    writeLog({ error: `Source-level error: ${error.message}`, source: "askapunk" });
     return [];
   }
 }
